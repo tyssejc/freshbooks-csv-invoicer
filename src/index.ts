@@ -99,9 +99,10 @@ router.post('/webhooks/ready', withContent, async (request: Request, env: Env) =
       });
     }
 
-    console.log('Webhook payload:', JSON.stringify(response, null, 2));
+    console.log('Webhook payload:', JSON.stringify(response.content, null, 2));
 
-    const payload = JSON.parse(response) as FreshBooksWebhookPayload;
+    // assuming JSON here
+    const payload = response.content as FreshBooksWebhookPayload;
 
     // Verify the webhook signature
     const isValid = await verifyWebhookSignature(request.clone(), env);
