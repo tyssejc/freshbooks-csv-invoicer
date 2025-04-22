@@ -1,7 +1,9 @@
 import { Router } from 'itty-router';
 import { error, json } from 'itty-router-extras';
-import { FreshBooksClient } from './freshbooks-client';
-import { TokenManager } from './token-manager';
+import { FreshBooksClient, FreshBooksAuth } from '@/lib/freshbooks';
+import { TokenManager } from '@/lib/token';
+import { FreshBooksApiError, FreshBooksRateLimitError } from '@/types/freshbooks';
+import { Env } from '@/types/env';
 
 // Types
 export interface TimeEntry {
@@ -25,130 +27,8 @@ export interface VendorInfo {
   email: string;
 }
 
-export interface Env {
-  // KV Namespace for storing credentials
-  CREDENTIALS: KVNamespace;
-  // FreshBooks credentials
-  FRESHBOOKS_CLIENT_ID: string;
-  FRESHBOOKS_CLIENT_SECRET: string;
-  FRESHBOOKS_ACCOUNT_ID: string;
-  // Environment variables for vendor info
-  VENDOR_ID: string;
-  VENDOR_NAME: string;
-  VENDOR_ADDRESS: string;
-  VENDOR_CITY: string;
-  VENDOR_STATE: string;
-  VENDOR_ZIP: string;
-  CONSULTANT_ID: string;
-  CONSULTANT_NAME: string;
-  VENDOR_CONTACT: string;
-  VENDOR_PHONE: string;
-  VENDOR_EMAIL: string;
-  OAUTH_REDIRECT_URI: string;
-}
-
-interface OAuthTokens {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number;
-}
-
 interface InvoiceRequest {
   invoiceId: string;
-}
-
-export class FreshBooksAuth {
-  private clientId: string;
-  private clientSecret: string;
-  private redirectUri: string;
-  private readonly authUrl = 'https://auth.freshbooks.com/oauth/authorize';
-  private readonly tokenUrl = 'https://api.freshbooks.com/auth/oauth/token';
-  private currentTokens: OAuthTokens | null = null;
-
-  constructor(clientId: string, clientSecret: string, redirectUri: string) {
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.redirectUri = redirectUri;
-  }
-
-  setTokens(tokens: OAuthTokens): void {
-    this.currentTokens = tokens;
-  }
-
-  getAccessToken(): string {
-    if (!this.currentTokens) {
-      throw new Error('No tokens available');
-    }
-    return this.currentTokens.access_token;
-  }
-
-  getAuthorizationUrl(): string {
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      response_type: 'code',
-      redirect_uri: this.redirectUri,
-    });
-
-    return `${this.authUrl}?${params.toString()}`;
-  }
-
-  async exchangeCodeForToken(code: string): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
-    const response = await fetch(this.tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        code,
-        redirect_uri: this.redirectUri
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to exchange code for token');
-    }
-
-    const tokens = await response.json();
-    this.currentTokens = tokens;
-    return tokens;
-  }
-
-  async refreshAccessToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
-    const response = await fetch(this.tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        grant_type: 'refresh_token',
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        refresh_token: refreshToken
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh access token');
-    }
-
-    const tokens = await response.json();
-    this.currentTokens = tokens;
-    return tokens;
-  }
-
-  async getCurrentTokens(): Promise<{ access_token: string; refresh_token: string; expires_in: number } | null> {
-    return this.currentTokens;
-  }
-
-  async refreshCurrentToken(): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
-    if (!this.currentTokens?.refresh_token) {
-      throw new Error('No refresh token available');
-    }
-    return this.refreshAccessToken(this.currentTokens.refresh_token);
-  }
 }
 
 // Create router
@@ -199,41 +79,42 @@ router.get('/oauth/callback', async (request, env) => {
   }
 });
 
-// Invoice processing route
-router.post('/', async (request: Request, env: Env) => {
-  try {
-    const { invoiceId } = await request.json() as InvoiceRequest;
-    if (!invoiceId) {
-      return new Response('Invoice ID required', { status: 400 });
-    }
+// Main POST route
+// router.post('/', async (request: Request, env: Env) => {
+//   try {
+//     const { invoiceId } = await request.json() as InvoiceRequest;
+//     if (!invoiceId) {
+//       return new Response('Invoice ID required', { status: 400 });
+//     }
 
-    // Get OAuth tokens
-    const client = await TokenManager.getInstance().getAuthenticatedClient(env);
+//     // Get OAuth tokens
+//     const client = await TokenManager.getInstance().getAuthenticatedClient(env);
 
-    // TODO: Implement invoice processing with OAuth token
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'OAuth token available, invoice processing to be implemented'
-    }), {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+//     // TODO: Implement invoice processing with OAuth token
+//     return new Response(JSON.stringify({
+//       success: true,
+//       message: 'OAuth token available, invoice processing to be implemented'
+//     }), {
+//       headers: {
+//         'Content-Type': 'application/json'
+//       }
+//     });
 
-  } catch (error) {
-    console.error('Error processing request:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Error processing request:', error);
+//     return new Response(JSON.stringify({
+//       success: false,
+//       error: error instanceof Error ? error.message : 'Unknown error',
+//     }), {
+//       status: 500,
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//     });
+//   }
+// });
 
+// List invoices route (mostly for debugging)
 router.get('/list-invoices', async (request, env) => {
   try {
     const client = await TokenManager.getInstance().getAuthenticatedClient(env);
@@ -266,6 +147,76 @@ router.get('/list-invoices', async (request, env) => {
   }
 });
 
+router.post('/generate-csv', async (request, env) => {
+  try {
+    const client = await TokenManager.getInstance().getAuthenticatedClient(env);
+
+    // TODO: Validate request body
+
+    const { customerId, endDate, startDate } = request.body;
+
+    // TODO: create line items for invoice
+    const lineItems = [];
+
+    // TODO: create CSV file of invoice to attach to the invoice
+    
+    //upload invoice attachment
+    const attachment = await client.uploadAttachment(csvInvoice);
+    const { jwt, media_type } = attachment;
+
+    // TODO: Create invoice in Freshbooks
+    const invoice = await client.createInvoice({
+      due_offset_days: 30,
+      create_date: Date.now().toISOString().split('T')[0],
+      invoice_number: `TEST-${Date.now()}`,
+      lines: lineItems,
+      attachments: [
+        {
+          expenseid: null,
+          jwt,
+          media_type
+        }
+      ],
+      customerid: customerId
+    });
+
+    // TODO: Get the invoice we created above from Freshbooks
+
+    // TODO: Use data from that invoice to generate a CSV
+
+    // TODO: Allow user to review the CSV and confirm whether to send to specified email address
+
+    // TODO: Email the CSV to the specified email address using the template specified
+
+    return new Response(
+      `<!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice CSV Generator</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-100 p-8">
+          <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h1 class="text-2xl font-bold mb-4">Invoice CSV Generator</h1>
+            <div class="space-y-4">
+              <h2 class="text-xl font-semibold mb-2">Generated CSV</h2>
+              
+            </div>
+          </div>
+        </body>
+      </html>`,
+      { headers: { 'Content-Type': 'text/html' } }
+    );
+
+  } catch (error) {
+    console.error('Error generating CSV:', error);
+    return Response.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }, { status: 500 });
+  }
+});
+
 // Main routes
 router.get('/', () => new Response(
   `<!DOCTYPE html>
@@ -278,12 +229,16 @@ router.get('/', () => new Response(
       <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-4">FreshBooks to Kforce Invoice Converter</h1>
         <div class="space-y-4">
-          <a href="/oauth/init" class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          <a href="/oauth/init" target="_blank"class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             Connect FreshBooks Account
           </a>
           <div>
             <h2 class="text-xl font-semibold mb-2">Generate Invoice CSV</h2>
             <form action="/generate-csv" method="POST" class="space-y-4">
+              <select name="customer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <option value="">Select a client</option>
+                <option value="1575525">Kforce</option>
+              </select>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Start Date</label>
                 <input type="date" name="startDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
@@ -314,7 +269,7 @@ export default {
   },
 };
 
-export * from './lib/freshbooks';
-export * from './lib/token';
-export * from './types/env';
-export * from './types/freshbooks';
+export * from '@/lib/freshbooks';
+export * from '@/lib/token';
+export * from '@/types/env';
+export * from '@/types/freshbooks';

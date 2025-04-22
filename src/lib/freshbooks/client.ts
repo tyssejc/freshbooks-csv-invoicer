@@ -49,8 +49,31 @@ export class FreshBooksClient {
     return response.response.result.invoices;
   }
 
+  async createInvoice(invoice: FreshBooksInvoice): Promise<FreshBooksInvoice> {
+    const response = await this.makeRequest<FreshBooksResponse<FreshBooksInvoice>>(
+      { method: 'POST' },
+      `/accounting/account/${this.accountId}/invoices/invoices`,
+      JSON.stringify(invoice)
+    );
+    return response.response.result.invoice;
+  }
+
   async getInvoice(invoiceId: string): Promise<FreshBooksInvoice> {
     const response = await this.makeRequest<FreshBooksResponse<FreshBooksInvoice>>(`/accounting/account/${this.accountId}/invoices/invoices/${invoiceId}`);
     return response.response.result.invoice;
+  }
+
+  async uploadAttachment(attachment: File): Promise<FreshBooksAttachment> {
+    const response = await this.makeRequest<FreshBooksResponse<FreshBooksAttachment>>(
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/csv'
+        }
+      },
+      `/uploads/account/${this.accountId}/attachments`,
+      attachment
+    );
+    return response.response.result.attachment;
   }
 }
