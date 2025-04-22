@@ -35,3 +35,23 @@ Started by chatting with Claude about solutions. When it got to a certain point,
 
 Started to realize that Freshbooks provides a webhook API and that I don't need to rebuild the entire invoice creation flow, I can just create a webhook and use the data from that to generate a CSV
 
+### Webhook Implementation
+- Completely redesigned the application to use a webhook-based approach
+- Removed UI components as they're no longer needed
+- Created webhook verification system to validate incoming requests
+- Added webhook registration and verification endpoints
+- Enhanced FreshBooks client with webhook-related methods
+- First attempt at CSV generation logic for Kforce's required format
+- Updated environment variables to support webhook configuration
+
+### Challenges Overcome
+- FreshBooks webhook verification process was poorly documented
+- Verification requires handling form data (not JSON) in the `/webhooks/ready` endpoint (which expects JSON otherwise)
+- Had to create custom endpoints to register webhooks and resend verification codes
+- Needed to hardcode callback ID after registration for verification to work
+
+### Lessons Learned
+1. Webhook verification often involves undocumented steps
+2. Always implement proper request content type checking
+3. API providers sometimes use different formats for verification vs. actual webhook events
+4. Logging is essential when debugging webhook interactions
