@@ -1,0 +1,30 @@
+name = "freshbooks-csv-invoicer"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+workers_dev = true
+
+[vars]
+VENDOR_ID = ""
+VENDOR_NAME = "Your Company Name"
+VENDOR_ADDRESS = "123 Main St"
+VENDOR_CITY = "Anytown"
+VENDOR_STATE = "FL"
+VENDOR_ZIP = "12345"
+CONSULTANT_ID = "12345"
+CONSULTANT_NAME = "John Smith"
+VENDOR_CONTACT = "Jane Doe"
+VENDOR_PHONE = "1234567890"
+VENDOR_EMAIL = "jane@example.com"
+FRESHBOOKS_CLIENT_ID = ""
+FRESHBOOKS_CLIENT_SECRET = ""
+FRESHBOOKS_ACCOUNT_ID = ""
+OAUTH_REDIRECT_URI = "https://auth.example.com/oauth/callback"
+
+[[kv_namespaces]]
+binding = "CREDENTIALS"
+id = ""
+
+# Optional: Add cron trigger for automatic monthly processing
+#[triggers]
+#crons = ["0 0 1 * *"] # Run at midnight on the 1st of each month
