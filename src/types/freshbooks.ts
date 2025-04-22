@@ -82,6 +82,7 @@ export interface FreshBooksInvoice {
   create_date: string;
   currency_code: string;
   current_organization: string;
+  customerid?: string;
   date_paid?: string;
   description: string;
   discount_description: string;
@@ -98,7 +99,7 @@ export interface FreshBooksInvoice {
   invoice_number: string;
   language: string;
   last_order_status: string;
-  lines: FreshBooksLineItem[];
+  lines: FreshBooksInvoiceLine[];
   lname: string;
   notes: string;
   organization: string;
@@ -114,10 +115,51 @@ export interface FreshBooksInvoice {
   street2: string;
   template: string;
   terms: string;
+  total_amount: number;
   updated: string;
   v3_status: string;
   vat_name: string;
   vat_number: string;
+  attachments?: FreshBooksAttachment[];
+}
+
+// Renamed from FreshBooksLineItem to match the property name in the invoice
+export interface FreshBooksInvoiceLine {
+  amount: number;
+  description: string;
+  name: string;
+  quantity: number;
+  rate: number;
+  taxAmount1?: number;
+  taxAmount2?: number;
+  taxName1?: string;
+  taxName2?: string;
+  type: number;
+  unit_cost: number;
+}
+
+// FreshBooks Attachment Type
+export interface FreshBooksAttachment {
+  id: string;
+  jwt: string;
+  media_type: string;
+  name?: string;
+  size?: number;
+  content_type?: string;
+  expenseid?: string | null;
+}
+
+// FreshBooks Webhook Types
+export interface FreshBooksWebhookPayload {
+  event_type: string;
+  event_source: string;
+  event_time: string;
+  data: {
+    invoice_id: string;
+    account_id: string;
+    business_id: string;
+    [key: string]: any;
+  };
 }
 
 // FreshBooks Client Types
