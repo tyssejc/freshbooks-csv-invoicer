@@ -1,6 +1,5 @@
-import { FreshBooksAuth } from '../index';
-import { FreshBooksClient } from '../freshbooks-client';
-import { FreshBooksApiError, FreshBooksRateLimitError } from '../types/freshbooks';
+import { FreshBooksAuth, FreshBooksClient } from '@/lib/freshbooks';
+import { FreshBooksApiError, FreshBooksRateLimitError } from '@/types/freshbooks';
 
 /**
  * Example 1: Basic Invoice Fetching
@@ -9,7 +8,7 @@ import { FreshBooksApiError, FreshBooksRateLimitError } from '../types/freshbook
 async function fetchRecentInvoices(env: {
   FRESHBOOKS_CLIENT_ID: string;
   FRESHBOOKS_CLIENT_SECRET: string;
-  FRESHBOOKS_ACCOUNT_ID: string;
+  FRESHBOOKS_ACCOUNT_ID: string;  
 }) {
   try {
     // Initialize auth and client
