@@ -1,5 +1,5 @@
 {
-  "name": "freshbooks-kforce-worker",
+  "name": "freshbooks-csv-invoicer",
   "version": "1.0.0",
   "description": "FreshBooks to Kforce invoice converter",
   "main": "dist/index.js",
@@ -14,11 +14,10 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "itty-router": "^4.0.27",
-    "itty-router-extras": "^0.4.5"
+    "hono": "^4.7.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250422.0",
+    "@cloudflare/workers-types": "^4.20250423.0",
     "@peculiar/webcrypto": "^1.4.5",
     "@types/jest": "^29.5.12",
     "bun-types": "^1.2.10",
@@ -28,5 +27,6 @@
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3",
     "wrangler": "^4.13.0"
-  }
+  },
+  "packageManager": "bun@1.2.10"
 }
