@@ -19,6 +19,6 @@
 
 ## Future Development
 
+- [x] Convert from node/itty-router to bun/hono
 - [ ] Create invoices from UI from unbilled time tracking
 - [ ] Email CSVs to Kforce when generated
-- [ ] Convert from node/itty-router to bun/hono

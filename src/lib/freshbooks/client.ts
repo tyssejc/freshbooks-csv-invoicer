@@ -108,6 +108,20 @@ export class FreshBooksClient {
     return response.response.result.attachment;
   }
 
+  async registerWebhook(env: Env): Promise<void> {
+    const response = await this.makeRequest(
+      `/events/account/${this.accountId}/events/callbacks`,
+      { method: 'POST' },
+      {
+        callback: {
+          uri: `${env.FRESHBOOKS_WEBHOOK_URL}/webhooks/ready`,
+          event: 'invoice.create'
+        }
+      }
+    );
+    return response;
+  }
+
   async resendVerificationCode(callbackId: string): Promise<void> {
     const response = await this.makeRequest<void>(
       `/events/account/${this.accountId}/events/callbacks/${callbackId}`,
@@ -121,28 +135,10 @@ export class FreshBooksClient {
     return response;
   }
 
-  async registerWebhook(env: Env): Promise<void> {
-    const response = await this.makeRequest(
-      `/events/account/${this.accountId}/events/callbacks`,
-      {
-        method: 'POST',
-      },
-      {
-        callback: {
-          uri: `${env.FRESHBOOKS_WEBHOOK_URL}/webhooks/ready`,
-          event: 'invoice.create'
-        }
-      }
-    );
-    return response;
-  }
-
   async verifyWebhook(callbackId: string, verifier: string): Promise<void> {
     const response = await this.makeRequest(
       `/events/account/${this.accountId}/events/callbacks/${callbackId}`,
-      {
-        method: 'PUT',
-      },
+      { method: 'PUT' },
       {
         callback: { 
           verifier
