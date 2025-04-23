@@ -2,6 +2,7 @@ export interface Env {
   FRESHBOOKS_CLIENT_ID: string;
   FRESHBOOKS_CLIENT_SECRET: string;
   FRESHBOOKS_ACCOUNT_ID: string;
+  FRESHBOOKS_WEBHOOK_URL: string;
   FRESHBOOKS_WEBHOOK_SECRET: string;
   OAUTH_REDIRECT_URI: string;
   
