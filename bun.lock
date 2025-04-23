@@ -4,13 +4,12 @@
     "": {
       "name": "freshbooks-kforce-worker",
       "dependencies": {
+        "@types/bun": "^1.2.10",
         "hono": "^4.7.7",
       },
       "devDependencies": {
-        "@cloudflare/workers-types": "^4.20250423.0",
         "@peculiar/webcrypto": "^1.4.5",
         "@types/jest": "^29.5.12",
-        "bun-types": "^1.2.10",
         "concurrently": "^8.2.2",
         "jest": "^29.7.0",
         "jest-fetch-mock": "^3.0.3",
@@ -264,6 +263,8 @@
     "@types/babel__template": ["@types/babel__template@7.4.4", "", { "dependencies": { "@babel/parser": "^7.1.0", "@babel/types": "^7.0.0" } }, "sha512-h/NUaSyG5EyxBIp8YRxo4RMe2/qQgvyowRwVMzhYhBCONbW8PUsg4lkFMrhgZhUe5z3L3MiLDuvyJ/CaPa2A8A=="],
 
     "@types/babel__traverse": ["@types/babel__traverse@7.20.6", "", { "dependencies": { "@babel/types": "^7.20.7" } }, "sha512-r1bzfrm0tomOI8g1SzvCaQHo6Lcv6zu0EA+W2kHrt8dyrHQxGzBBL4kdkzIS+jBMV+EYcMAEAqXqYaLJq5rOZg=="],
+
+    "@types/bun": ["@types/bun@1.2.10", "", { "dependencies": { "bun-types": "1.2.10" } }, "sha512-eilv6WFM3M0c9ztJt7/g80BDusK98z/FrFwseZgT4bXCq2vPhXD4z8R3oddmAn+R/Nmz9vBn4kweJKmGTZj+lg=="],
 
     "@types/graceful-fs": ["@types/graceful-fs@4.1.9", "", { "dependencies": { "@types/node": "*" } }, "sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ=="],
 
