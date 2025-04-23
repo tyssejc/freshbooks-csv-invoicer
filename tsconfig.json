@@ -3,24 +3,28 @@
     "target": "ES2020",
     "module": "ES2020",
     "lib": ["ES2020", "DOM"],
-    "moduleResolution": "node",
-    "types": ["@cloudflare/workers-types", "jest", "node"],
-    "noEmit": true,
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
     "isolatedModules": true,
+    "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "jsx": "preserve",
-    "resolveJsonModule": true,
+    "types": ["bun-types", "@cloudflare/workers-types", "jest"],
     "typeRoots": [
+      "./src/types",
       "./node_modules/@types",
-      "./src/types"
+      "./node_modules/bun-types",
+      "./node_modules/@cloudflare/workers-types"
     ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "outDir": "dist"
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules"]
