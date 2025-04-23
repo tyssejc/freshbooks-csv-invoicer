@@ -1,5 +1,3 @@
-import { Env } from '@/types/env';
-
 /**
  * Verifies that a webhook request came from FreshBooks
  * 
@@ -17,7 +15,7 @@ export async function verifyWebhookSignature(request: Request, env: Env): Promis
     }
 
     // Get the webhook secret
-    const secret = env.FRESHBOOKS_WEBHOOK_SECRET;
+    const secret = env.CREDENTIALS.get('freshbooks_webhook_secret');
     if (!secret) {
       console.error('No webhook secret configured');
       return false;

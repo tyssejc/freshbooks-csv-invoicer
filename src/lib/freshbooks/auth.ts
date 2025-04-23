@@ -1,5 +1,4 @@
 import { TokenManager } from '@/lib/token';
-import { Env } from '@/types/env';
 
 export class FreshBooksAuth {
   private clientId: string;

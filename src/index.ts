@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { FreshBooksClient, FreshBooksAuth } from '@/lib/freshbooks';
 import { TokenManager } from '@/lib/token';
 import { FreshBooksApiError, FreshBooksRateLimitError, FreshBooksWebhookPayload } from '@/types/freshbooks';
-import { Env } from '@/types/env';
 import { verifyWebhookSignature } from '@/lib/freshbooks/util';
 import { processInvoice } from '@/lib/invoice/processor';
 
@@ -102,6 +101,7 @@ app.get('/oauth/callback', async (c) => {
 
 // Webhook handler for FreshBooks invoice.create events
 app.post('/webhooks/ready', async (c) => {
+  const env = c.env;
   try {
     // only needed to verify the webhook with FreshBooks
     if (c.req.header('Content-Type') === 'application/x-www-form-urlencoded') {
@@ -109,9 +109,24 @@ app.post('/webhooks/ready', async (c) => {
       const content = c.get('content');
       console.log(content);
 
-      const verifier = content.verifier;
+      const verifier = content.verifier as string;
+      if (!verifier) {
+        return c.json({ 
+          status: 'error', 
+          message: 'No verifier provided' 
+        }, 400);
+      }
+      await env.CREDENTIALS.put('webhook_verifier', verifier);
 
-      const verification = await client.verifyWebhook('827106', verifier);
+      const webhookId = await env.CREDENTIALS.get('webhook_id');
+      if (!webhookId) {
+        return c.json({ 
+          status: 'error', 
+          message: 'Webhook ID not found' 
+        }, 500);
+      }
+
+      const verification = await client.verifyWebhook(webhookId, verifier);
       return c.json({ 
         status: 'success', 
         message: 'Verification successful',
@@ -126,7 +141,7 @@ app.post('/webhooks/ready', async (c) => {
     const payload = content as FreshBooksWebhookPayload;
 
     // Verify the webhook signature
-    const isValid = await verifyWebhookSignature(c.req.raw.clone(), c.env);
+    const isValid = await verifyWebhookSignature(c.req.raw.clone(), env);
     if (!isValid) {
       console.error('Invalid webhook signature');
       return c.json({ 
@@ -170,11 +185,17 @@ app.post('/webhooks/ready', async (c) => {
 app.get('/webhooks/resend-code', async (c) => {
   try {
     const client = await TokenManager.getInstance().getAuthenticatedClient(c.env);
-    const response = await client.resendVerificationCode('827106');
+    const webhookId = await c.env.CREDENTIALS.get('webhook_id');
+    if (!webhookId) {
+      return c.json({ 
+        status: 'error', 
+        message: 'Webhook ID not found' 
+      }, 500);
+    }
+    await client.resendVerificationCode(webhookId);
     return c.json({ 
       status: 'success', 
-      message: 'Verification code resent',
-      code: response
+      message: 'Verification code resent'
     });
   } catch (error) {
     console.error('Error resending verification code:', error);
@@ -224,6 +245,7 @@ app.get('/webhooks/register', async (c) => {
     console.log('Registering webhook...', client);
     const response = await client.registerWebhook(c.env);
     console.log('Webhook registered successfully');
+    await c.env.CREDENTIALS.put('freshbooks_webhook_id', response.id);
     return c.text('Webhook registered successfully', 200);
   } catch (error) {
     console.error('Error registering webhook:', error);
