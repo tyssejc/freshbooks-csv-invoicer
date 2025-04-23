@@ -1,4 +1,3 @@
-import { Env } from '@/types/env';
 import { FreshBooksClient } from '@/lib/freshbooks';
 
 interface OAuthTokens {
