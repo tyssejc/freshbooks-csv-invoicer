@@ -16,7 +16,7 @@ A Cloudflare Worker that automatically processes FreshBooks invoices and convert
 
 - FreshBooks account with API access
 - Cloudflare Workers account
-- Wrangler CLI installed (`npm install -g wrangler`)
+- Wrangler CLI (installed with `bun install`)
 
 ### Environment Variables
 
@@ -41,7 +41,7 @@ Required environment variables:
 
 1. Register your application in the FreshBooks Developer Portal
 2. Set the redirect URI to `https://your-worker-url.workers.dev/oauth/callback`
-3. Deploy the worker with `wrangler deploy`
+3. Deploy the worker with `bun run deploy`
 4. Visit `https://your-worker-url.workers.dev/oauth/init` to authorize the application
 
 ### Webhook Setup
@@ -55,20 +55,20 @@ Required environment variables:
 ### Local Development
 
 ```bash
-npm install
-wrangler dev
+bun install
+bun run dev
 ```
 
 ### Testing
 
 ```bash
-npm test
+bun run test
 ```
 
 ### Deployment
 
 ```bash
-wrangler deploy
+bun run deploy
 ```
 
 ## How It Works
