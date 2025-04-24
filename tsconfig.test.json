@@ -7,7 +7,7 @@
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
     "jsx": "preserve",
-    "types": ["vitest/globals", "@cloudflare/vitest-pool-workers"],
+    "types": ["env", "vitest/globals", "@cloudflare/vitest-pool-workers"],
     "typeRoots": [
       "./test/types",
       "./node_modules"
