@@ -7,9 +7,7 @@ import {
 } from '@/types/freshbooks';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Setup fetch mock
-const fetchMock = vi.fn();
-global.fetch = fetchMock;
+import mockFetchResponse from './utils/mock-fetch-response';
 
 describe('FreshBooksClient', () => {
   let client: FreshBooksClient;
@@ -30,17 +28,13 @@ describe('FreshBooksClient', () => {
         { id: '2', invoice_number: 'INV-002' }
       ];
 
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          response: {
-            result: {
-              invoices: mockInvoices
-            }
+      const mockFetch = mockFetchResponse({
+        response: {
+          result: {
+            invoices: mockInvoices
           }
-        })
-      } as Response);
+        }
+      });
 
       const invoices = await client.listInvoices();
       expect(invoices).toHaveLength(2);
@@ -48,8 +42,8 @@ describe('FreshBooksClient', () => {
       expect(invoices[1].invoice_number).toBe('INV-002');
 
       // Verify the request
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      const [url, options] = fetchMock.mock.calls[0];
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/accounting/account/test-account-id/invoices/invoices');
       expect(options).toMatchObject({
         headers: {
@@ -61,14 +55,15 @@ describe('FreshBooksClient', () => {
     });
 
     it('should handle rate limiting', async () => {
-      const headers = new Headers();
-      headers.set('Retry-After', '30');
-
-      fetchMock.mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-        headers
-      } as Response);
+      const mockFetch = mockFetchResponse(
+        { error: 'rate_limited' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': '30'
+          }
+        }
+      );
 
       await expect(client.listInvoices())
         .rejects
@@ -76,10 +71,10 @@ describe('FreshBooksClient', () => {
     });
 
     it('should handle authentication errors', async () => {
-      fetchMock.mockResolvedValueOnce({
-        ok: false,
-        status: 401
-      } as Response);
+      const mockFetch = mockFetchResponse(
+        { error: 'unauthorized' },
+        { status: 401 }
+      );
 
       await expect(client.listInvoices())
         .rejects
@@ -94,24 +89,20 @@ describe('FreshBooksClient', () => {
         invoice_number: 'INV-001'
       };
 
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          response: {
-            result: {
-              invoice: mockInvoice
-            }
+      const mockFetch = mockFetchResponse({
+        response: {
+          result: {
+            invoice: mockInvoice
           }
-        })
-      } as Response);
+        }
+      });
 
       const invoice = await client.getInvoice('1');
       expect(invoice.invoice_number).toBe('INV-001');
 
       // Verify the request
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      const [url, options] = fetchMock.mock.calls[0];
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/accounting/account/test-account-id/invoices/invoices/1');
       expect(options).toMatchObject({
         headers: {
