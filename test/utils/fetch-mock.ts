@@ -1,9 +1,11 @@
 // Mock implementation of fetch for testing
-type FetchMock = jest.Mock<Promise<Response>> & {
-  mockResponseOnce: (body: string, init?: ResponseInit) => void;
+import { vi } from 'vitest';
+
+type FetchMock = ReturnType<typeof vi.fn<any[], Promise<Response>>> & {
+  mockResponseOnce: (responseData: any, init?: ResponseInit) => void;
 };
 
-export const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+export const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
   // Default mock implementation
   return new Response(JSON.stringify({}), {
     status: 200,
@@ -12,7 +14,11 @@ export const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: Request
 }) as FetchMock;
 
 // Helper to mock a specific response
-fetchMock.mockResponseOnce = (body: string, init?: ResponseInit) => {
+fetchMock.mockResponseOnce = (responseData: any, init?: ResponseInit) => {
+  const body = typeof responseData === 'string' 
+    ? responseData 
+    : JSON.stringify(responseData);
+    
   fetchMock.mockImplementationOnce(async () => new Response(body, init));
 };
 

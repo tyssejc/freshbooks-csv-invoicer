@@ -263,8 +263,8 @@ app.all('*', (c) => c.text('Not found', 404));
 export default {
   fetch: app.fetch,
 };
+} satisfies ExportedHandler<Env>;
 
 export * from '@/lib/freshbooks';
 export * from '@/lib/token';
-export * from '@/types/env';
 export * from '@/types/freshbooks';
