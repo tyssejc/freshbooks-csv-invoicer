@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import mockFetchResponse from './utils/mock-fetch-response';
 
 describe('Cloudflare Worker Environment', () => {
   it('should have access to Cloudflare Worker globals', () => {
@@ -12,14 +13,12 @@ describe('Cloudflare Worker Environment', () => {
   it('should support fetch API', async () => {
     // This test will be skipped in CI environments
     // but will run locally with the worker environment
-    const mockResponse = new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const expectedResponse = { success: true };
+    const mockFetch = mockFetchResponse(expectedResponse);
+
+    const response = await fetch('https://api.example.com/');
     
-    expect(mockResponse.status).toBe(200);
-    expect(mockResponse.ok).toBe(true);
-    
-    const data = await mockResponse.json();
-    expect(data).toEqual({ success: true });
+    const data = await response.json();
+    expect(data).toEqual(expectedResponse);
   });
 });
