@@ -15,7 +15,6 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@types/bun": "^1.2.10",
     "hono": "^4.7.7"
   },
   "devDependencies": {
