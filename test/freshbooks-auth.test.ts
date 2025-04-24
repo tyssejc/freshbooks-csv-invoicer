@@ -54,18 +54,6 @@ describe('FreshBooksAuth', () => {
 
   describe('exchangeCodeForToken', () => {
     it('should exchange code for tokens successfully', async () => {
-      const request = new IncomingRequest('https://test.example.com/oauth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'code=test-code'
-      });
-
-      const ctx = createExecutionContext();
-      const response = await worker.fetch(request, env, ctx);
-
-      await waitOnExecutionContext(ctx);
 
       const mockResponse = {
         access_token: 'test-access-token',
