@@ -1,7 +1,6 @@
 import { TokenManager } from '@/lib/token';
-import { jest } from '@jest/globals';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { Env } from '@/types/env';
-import type { Mock } from 'jest-mock';
 
 // Define the KV store interface to match Env.CREDENTIALS
 interface KVStore {
@@ -12,10 +11,10 @@ interface KVStore {
 
 describe('TokenManager', () => {
   // Create mock KV store with proper typing
-  const mockKV: jest.Mocked<KVStore> = {
-    get: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn()
+  const mockKV: KVStore = {
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
   };
 
   const mockEnv: Env = {
@@ -40,15 +39,15 @@ describe('TokenManager', () => {
   let tokenManager: TokenManager;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Use type assertion to access private static field
     (TokenManager as any)['instance'] = undefined;
     tokenManager = TokenManager.getInstance();
 
     // Reset mock implementations
-    mockKV.get.mockImplementation(() => Promise.resolve(null));
-    mockKV.put.mockImplementation(() => Promise.resolve());
-    mockKV.delete.mockImplementation(() => Promise.resolve());
+    vi.mocked(mockKV.get).mockImplementation(() => Promise.resolve(null));
+    vi.mocked(mockKV.put).mockImplementation(() => Promise.resolve());
+    vi.mocked(mockKV.delete).mockImplementation(() => Promise.resolve());
   });
 
   describe('getInstance', () => {
@@ -67,7 +66,7 @@ describe('TokenManager', () => {
         expires_at: Date.now() + 3600000
       };
 
-      mockKV.get.mockImplementationOnce(() => Promise.resolve(JSON.stringify(tokens)));
+      vi.mocked(mockKV.get).mockResolvedValueOnce(JSON.stringify(tokens));
 
       const client = await tokenManager.getAuthenticatedClient(mockEnv);
       expect(client).toBeDefined();
@@ -75,7 +74,7 @@ describe('TokenManager', () => {
     });
 
     it('should throw error when no tokens available', async () => {
-      mockKV.get.mockImplementationOnce(() => Promise.resolve(null));
+      vi.mocked(mockKV.get).mockResolvedValueOnce(null);
 
       await expect(tokenManager.getAuthenticatedClient(mockEnv))
         .rejects

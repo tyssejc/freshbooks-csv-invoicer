@@ -5,19 +5,22 @@ import {
   FreshBooksRateLimitError,
   FreshBooksInvoice
 } from '@/types/freshbooks';
-import { jest } from '@jest/globals';
-import fetchMock from 'jest-fetch-mock';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+// Setup fetch mock
+const fetchMock = vi.fn();
+global.fetch = fetchMock;
 
 describe('FreshBooksClient', () => {
   let client: FreshBooksClient;
 
   beforeEach(() => {
-    fetchMock.resetMocks();
+    vi.resetAllMocks();
     client = new FreshBooksClient('test-access-token', 'test-account-id');
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listInvoices', () => {
@@ -27,13 +30,17 @@ describe('FreshBooksClient', () => {
         { id: '2', invoice_number: 'INV-002' }
       ];
 
-      fetchMock.mockResponseOnce(JSON.stringify({
-        response: {
-          result: {
-            invoices: mockInvoices
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          response: {
+            result: {
+              invoices: mockInvoices
+            }
           }
-        }
-      }));
+        })
+      } as Response);
 
       const invoices = await client.listInvoices();
       expect(invoices).toHaveLength(2);
@@ -41,6 +48,7 @@ describe('FreshBooksClient', () => {
       expect(invoices[1].invoice_number).toBe('INV-002');
 
       // Verify the request
+      expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, options] = fetchMock.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/accounting/account/test-account-id/invoices/invoices');
       expect(options).toMatchObject({
@@ -53,12 +61,14 @@ describe('FreshBooksClient', () => {
     });
 
     it('should handle rate limiting', async () => {
-      fetchMock.mockResponseOnce('', {
+      const headers = new Headers();
+      headers.set('Retry-After', '30');
+
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
         status: 429,
-        headers: {
-          'Retry-After': '30'
-        }
-      });
+        headers
+      } as Response);
 
       await expect(client.listInvoices())
         .rejects
@@ -66,9 +76,10 @@ describe('FreshBooksClient', () => {
     });
 
     it('should handle authentication errors', async () => {
-      fetchMock.mockResponseOnce('', {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
         status: 401
-      });
+      } as Response);
 
       await expect(client.listInvoices())
         .rejects
@@ -83,18 +94,23 @@ describe('FreshBooksClient', () => {
         invoice_number: 'INV-001'
       };
 
-      fetchMock.mockResponseOnce(JSON.stringify({
-        response: {
-          result: {
-            invoice: mockInvoice
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          response: {
+            result: {
+              invoice: mockInvoice
+            }
           }
-        }
-      }));
+        })
+      } as Response);
 
       const invoice = await client.getInvoice('1');
       expect(invoice.invoice_number).toBe('INV-001');
 
       // Verify the request
+      expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, options] = fetchMock.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/accounting/account/test-account-id/invoices/invoices/1');
       expect(options).toMatchObject({
