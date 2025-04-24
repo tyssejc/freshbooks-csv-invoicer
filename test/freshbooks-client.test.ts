@@ -6,7 +6,6 @@ import {
   FreshBooksInvoice
 } from '@/types/freshbooks';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-
 import mockFetchResponse from './utils/mock-fetch-response';
 
 describe('FreshBooksClient', () => {
