@@ -262,7 +262,6 @@ app.all('*', (c) => c.text('Not found', 404));
 // Export the worker
 export default {
   fetch: app.fetch,
-};
 } satisfies ExportedHandler<Env>;
 
 export * from '@/lib/freshbooks';
