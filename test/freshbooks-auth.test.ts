@@ -77,12 +77,6 @@ describe('FreshBooksAuth', () => {
         expires_in: 3600
       };
 
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse
-      } as Response);
-
       const tokens = await auth.exchangeCodeForToken('test-code');
       expect(tokens).toEqual(mockResponse);
 
