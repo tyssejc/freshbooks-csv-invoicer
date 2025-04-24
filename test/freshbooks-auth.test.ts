@@ -1,20 +1,16 @@
-import {
-  env,
-  createExecutionContext,
-  waitOnExecutionContext
-} from 'cloudflare:test';
 import { FreshBooksAuth } from '@/lib/freshbooks';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import worker from '../src';
-
-// Use this for now to get a correctly-typed Request to pass to fetch
-const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
+import mockFetchResponse from './utils/mock-fetch-response';
 
 describe('FreshBooksAuth', () => {
+
   let auth: FreshBooksAuth;
 
   beforeEach(() => {
+    // Reset all mocks to ensure test isolation
     vi.resetAllMocks();
+
+    // Create a fresh auth instance for each test
     auth = new FreshBooksAuth(
       'test-client-id',
       'test-client-secret',
@@ -58,30 +54,19 @@ describe('FreshBooksAuth', () => {
 
   describe('exchangeCodeForToken', () => {
     it('should exchange code for tokens successfully', async () => {
-      const request = new IncomingRequest('https://test.example.com/oauth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'code=test-code'
-      });
-
-      const ctx = createExecutionContext();
-      const response = await worker.fetch(request, env, ctx);
-
-      await waitOnExecutionContext(ctx);
-
       const mockResponse = {
         access_token: 'test-access-token',
         refresh_token: 'test-refresh-token',
         expires_in: 3600
       };
 
+      const mockFetch = mockFetchResponse(mockResponse);
+
       const tokens = await auth.exchangeCodeForToken('test-code');
       expect(tokens).toEqual(mockResponse);
 
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      const [url, options] = fetchMock.mock.calls[0];
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/auth/oauth/token');
       expect(options).toMatchObject({
         method: 'POST',
@@ -101,11 +86,10 @@ describe('FreshBooksAuth', () => {
     });
 
     it('should handle exchange error', async () => {
-      fetchMock.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        json: async () => ({ error: 'invalid_grant' })
-      } as Response);
+      const mockFetch = mockFetchResponse(
+        { error: 'invalid_grant'},
+        { status: 400 }
+      );
 
       await expect(auth.exchangeCodeForToken('invalid-code'))
         .rejects
@@ -121,17 +105,13 @@ describe('FreshBooksAuth', () => {
         expires_in: 3600
       };
 
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse
-      } as Response);
+      const mockFetch = mockFetchResponse(mockResponse);
 
       const tokens = await auth.refreshAccessToken('old-refresh-token');
       expect(tokens).toEqual(mockResponse);
 
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      const [url, options] = fetchMock.mock.calls[0];
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.freshbooks.com/auth/oauth/token');
       expect(options).toMatchObject({
         method: 'POST',
@@ -150,11 +130,10 @@ describe('FreshBooksAuth', () => {
     });
 
     it('should handle refresh error', async () => {
-      fetchMock.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        json: async () => ({ error: 'invalid_grant' })
-      } as Response);
+      const mockFetch = mockFetchResponse(
+        { error: 'invalid_grant' },
+        { status: 400 }
+      );
 
       await expect(auth.refreshAccessToken('invalid-refresh-token'))
         .rejects
